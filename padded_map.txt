@@ -1,0 +1,16 @@
+E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   
+E                               P   P   P   P   P   P   P   P   P   P   P   P   P   P   P   P   P   P   P   P   P   P                                       E   
+E                               P                                                                               P   P                                       E   
+E               W   W   W   W   D   W   W   W   W                               W   W   W   W   W   W   D   D   W   W   W   W   W   W   W                   E   
+E               W   De      D           Co  Co  W                               W                               C   C                   W                   E   
+E               W   CHAR    W                   W                               W       I1      I2                              I6      W                   E   
+E               W   B   B   TV  W               W                               W       I1      I2      I3      I4      I5      I6      W                   E   
+E               W               W       TV      W                               W       I1      I2      I3      I4      I5      I6      W                   E   
+E               W   W   W   D   W   D   W   W   W                               W       I1      I2      I3      I4      I5      I6      W                   E   
+E               W   Ba  D               T   T   W                               W       I1      I2      I3      I4      I5      I6      W                   E   
+E               W   W   W   T                   D                               W       I1      I2      I3      I4      I5      I6      W                   E   
+E                       W   T       S       R   W                               W                                                       W                   E   
+E                       W   W   W   W   W   W   W                               W   W   W   W   W   W   W   W   W   W   W   W   W   W   W                   E   
+E                                                                                                                                                           E   
+E                                                                                                                                                           E   
+E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   E   
