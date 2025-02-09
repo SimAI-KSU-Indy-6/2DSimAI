@@ -1,6 +1,9 @@
-#Test file to get ollama python API running on local machine
-from ollama import chat
-from ollama import ChatResponse
+# Test file to get ollama python API running on local machine
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 allMap = [
     ["E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E"],
@@ -38,10 +41,13 @@ tile_definitions = {
     "I3": "Aisle 3",
     "I4": "Aisle 4",
     "I5": "Aisle 5",
-    "I6": "Aisle 6"
+    "I6": "Aisle 6",
+    "C": "Cashier"
 }
 
-print(str(tile_definitions))
+#print(str(tile_definitions))
+tileDefToString = ''.join(f"{k} - {v} | " for k, v in tile_definitions.items())
+
 
 def padList(twoDList):
     for rowIndex in range(len(twoDList)):
@@ -51,34 +57,58 @@ def padList(twoDList):
             if padding > 0:
                 twoDList[rowIndex][colIndex] = item + " " * padding  # Efficient padding
             elif padding < 0:
-                twoDList[rowIndex][colIndex] = item[:3] # Truncate if longer than 4.
+                twoDList[rowIndex][colIndex] = item[:4] # Truncate if longer than 4.  Corrected truncation length
+
 
 descriptions = [
     'Joey, a 22-year-old college student, lives for the dream of rock stardom.  His beat-up Epiphone Les Paul is his constant companion, a conduit for the raw energy he admires in his idol, Jimmy Page.  Hes a quiet, laid-back guy until the conversation turns to music, at which point his passion ignites.  Constantly daydreaming of stadium lights and roaring crowds, Joey channels his Zeppelin-inspired ambitions into original riffs, aiming for epic compositions.  He struggles to find bandmates who share his deep appreciation for classic rock; most of his peers are into more contemporary genres.  Driven by the desire to create something legendary, something timeless, Joey seeks to resurrect rock and roll with his own music, fueled by a belief in its enduring power.'
 ]
 time = ["12:30pm"]
-location = ["In bed", "at school", "walking to class"]
-prompt = [f"You are the following character: {descriptions[0]}, It is currently {time[0]} and you are currently {location[0]}, provide a single short thought as if you were the character in this situation."]
+location = ["In bed"]  # Removed extra options for simplicity in the prompt
+role = f"You are the following character: {descriptions[0]}, It is currently {time[0]} and you are currently {location[0]}" # Made role a single string
 
-
-"""response: ChatResponse = chat(model='deepseek-r1:1.5b', messages=[
-  {
-    'role': 'user',
-    'content': prompt[0],
-  },
-])"""
-
-#print(str(map))
 padList(allMap)
 
-print(allMap)
+mapContext = "Use the following map and map key to get context for your environment: \n" + '\n'.join(map(''.join, allMap)) + "\nKey: " + tileDefToString
 
-print('\n'.join(map(''.join, allMap)))
+jsonFormatInstruct = """Provide your response in JSON format, like this example:
 
-with open("padded_map.txt", "w") as f:  # Open file for writing
-    for row in allMap:
-        f.write(''.join(row) + '\n')  # Write each row to the file with a newline
+```json
+{
+  "thought": "...",
+  "action_description": "...",
+  "target_location": "...",
+  "target_coordinates": [row, column]
+}
+"""
 
-#print(response['message']['content'])
+prompt = mapContext + "\nProvide a single short thought as if you were the character in this situation and detail the next movement of the character based on the map and current position." + jsonFormatInstruct
 
-#print(prompt[0])
+gemini_key = os.environ["GEMINI_KEY"]
+
+client = OpenAI(
+    api_key=gemini_key,
+    base_url="https://generativelanguage.googleapis.com/v1beta/"
+)
+
+
+  # Pad the map *before* printing or using it in the prompt
+
+#print('\n'.join(map(''.join, allMap))) # Print padded map.
+
+try:
+    response = client.chat.completions.create(
+        model="gemini-1.5-flash",
+        messages=[
+            {"role": "system", "content": role}, # Corrected to use single string role
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    print("Initial Role:\n", role)
+    print("\nInitial Prompt:\n", prompt)
+
+    print("\nGemini Response:\n", response.choices[0].message.content)
+
+except Exception as e:
+    print(f"An error occurred: {e}") # Handle and print any exceptions
