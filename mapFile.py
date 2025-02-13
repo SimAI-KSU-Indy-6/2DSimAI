@@ -1,10 +1,4 @@
-# Test file to get ollama python API running on local machine
-from openai import OpenAI
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
+#File will hold map and definition variables for better modularity
 allMap = [
     ["E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E"],
     ["E",	" ", 	" ", 	" ", 	" ", 	" ", 	" ", 	" ", 	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	" ", 	" ", 	" ", 	" ", 	" ", 	" ", 	" ", 	" ", 	" ", 	"E"],
@@ -24,7 +18,7 @@ allMap = [
     ["E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E",	"E"]
 ]
 
-tile_definitions = {
+tile_definitions = { #Tuples for character in 2D map to description
     "E": "Edge of map",
     "P": "Path",
     "W": "Wall",
@@ -45,72 +39,35 @@ tile_definitions = {
     "C": "Cashier"
 }
 
-#print(str(tile_definitions))
-tileDefToString = ''.join(f"{k} - {v} | " for k, v in tile_definitions.items())
+tileDefToString = ''.join(f"{k} - {v} | " for k, v in tile_definitions.items()) #toString for tile Definitions
 
+def betterPadList(twoDList):
+    padded_map_string = ""  
 
-def padList(twoDList):
     for rowIndex in range(len(twoDList)):
+        row_string = ""  
         for colIndex in range(len(twoDList[rowIndex])):
             item = twoDList[rowIndex][colIndex]
-            padding = 4 - len(item)  # Calculate needed padding. 4 is the target length
+            padding = 4 - len(item)  
             if padding > 0:
-                twoDList[rowIndex][colIndex] = item + " " * padding  # Efficient padding
+                padded_item = item + " " * padding  
             elif padding < 0:
-                twoDList[rowIndex][colIndex] = item[:4] # Truncate if longer than 4.  Corrected truncation length
+                padded_item = item[:4]  
+            else:
+                padded_item = item 
 
+            row_string += padded_item  
+            if colIndex < len(twoDList[rowIndex]) -1: 
+                row_string += " "
 
-descriptions = [
-    'Joey, a 22-year-old college student, lives for the dream of rock stardom.  His beat-up Epiphone Les Paul is his constant companion, a conduit for the raw energy he admires in his idol, Jimmy Page.  Hes a quiet, laid-back guy until the conversation turns to music, at which point his passion ignites.  Constantly daydreaming of stadium lights and roaring crowds, Joey channels his Zeppelin-inspired ambitions into original riffs, aiming for epic compositions.  He struggles to find bandmates who share his deep appreciation for classic rock; most of his peers are into more contemporary genres.  Driven by the desire to create something legendary, something timeless, Joey seeks to resurrect rock and roll with his own music, fueled by a belief in its enduring power.'
-]
-time = ["12:30pm"]
-date = ["December 21st 2022"]
-location = ["In bed"]  # Removed extra options for simplicity in the prompt
-role = f"You are the following character: {descriptions[0]}, It is currently {time[0]} and you are currently {location[0]}" # Made role a single string
+        padded_map_string += row_string + "\n"  
 
-padList(allMap)
+    return padded_map_string  
 
-mapContext = "Use the following map and map key to get context for your environment the 'CHAR' is your current position: \n" + '\n'.join(map(''.join, allMap)) + "\nKey: " + tileDefToString
+paddedDefaultMap = betterPadList(allMap)
 
-jsonFormatInstruct = """Provide your response in JSON format, like this example:
+def agentMap(x, y):
+    tempAllMap = allMap
+    tempAllMap[x][y] = "CHAR"
 
-```json
-{
-  "thought": "...",
-  "action_description": "...",
-  "target_location": "...",
-  "target_location_description": "...",
-  "target_coordinates": [row, column]
-}
-"""
-
-prompt = mapContext + "\nProvide a single short thought as if you were the character in this situation and detail the next movement of the character based on the map and current position." + jsonFormatInstruct
-
-gemini_key = os.environ["GEMINI_KEY"]
-
-client = OpenAI(
-    api_key=gemini_key,
-    base_url="https://generativelanguage.googleapis.com/v1beta/"
-)
-
-
-  # Pad the map *before* printing or using it in the prompt
-
-#print('\n'.join(map(''.join, allMap))) # Print padded map.
-
-try:
-    response = client.chat.completions.create(
-        model="gemini-1.5-flash",
-        messages=[
-            {"role": "system", "content": role}, # Corrected to use single string role
-            {"role": "user", "content": prompt}
-        ]
-    )
-
-    print("Initial Role:\n", role)
-    print("\nInitial Prompt:\n", prompt)
-
-    print("\nGemini Response:\n", response.choices[0].message.content)
-
-except Exception as e:
-    print(f"An error occurred: {e}") # Handle and print any exceptions
+    return betterPadList(tempAllMap)
