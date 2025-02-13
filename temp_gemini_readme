@@ -1,0 +1,6 @@
+Using IDE:
+set a new run configuration of temp_gemini script:
+GEMINI_KEY=insert-key-here
+
+Terminal:
+set GEMINI_KEY=insert-key-here
