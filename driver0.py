@@ -58,5 +58,8 @@ try:
     print("Gemini Response:--------------------")
     print(response.choices[0].message.content)
 
+    agents[0].appendThought(response.choices[0].message.content, startTime)
+    print(agents[0].thoughts[0])
+
 except Exception as e:
     print(f"An error occurred: {e}") # Handle and print any exceptions

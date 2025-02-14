@@ -1,5 +1,8 @@
+import json
+
 class Agent:
     next_id = 0  # Class-level variable to store the next ID
+    next_thought_id = 0
     name = "N/A"
     description = "N/A"
     location = (1,1)
@@ -69,13 +72,61 @@ class Agent:
     def getRolePrompt(self, fullDateString):
         role = f"You are the following character: {self.description}, It is currently {fullDateString} and you are currently on {self.currentMapLocation}" # Made role a single string
         return role
+    
+    def appendThought(self, thoughtString, dateTimeObj):
+        currThought = Thought(dateTimeObj, thoughtString, self.location)
+        self.thoughts.append(currThought)
+        self.location = currThought.endLoc
 
 class Thought:
+    nextThoughtId = 0
     thoughtText = "N/A"
     action = "N/A"
+    location = "N/A"
     locationDesc = "N/A"
-    day = 20231221 #example integer for day
-    time = 1430 #military time example for 2:30PM
+    startLoc = (1,1)
+    endLoc = (1,2)
+    dayInt = 20231221 #example integer for day
+    timeInt = 1430 #military time example for 2:30PM
+
+    def __init__(self, dateTimeObj, thoughtString="N/A", sLoc = (1,1)):
+        self.thoughtId = Thought.nextThoughtId  
+        Thought.nextThoughtId += 1
+        self.dayInt = int(dateTimeObj.strftime("%Y%m%d"))
+        self.timeInt = int(dateTimeObj.strftime("%H%M"))
+        self.startLoc = sLoc
+
+        startJsonIndex = thoughtString.find("{")
+        endJsonIndex = thoughtString.find("}")+1
+        print(f"JSON String:\n{thoughtString}")
+        print(f"JSON String Formatted:\n{thoughtString[startJsonIndex:endJsonIndex+1]}")
+        
+        jsonObj = json.loads(thoughtString[startJsonIndex:endJsonIndex+1])
+        self.thoughtText = jsonObj["thought"]
+        self.action = jsonObj["action_description"]
+        self.location = jsonObj["target_location"]
+        self.locationDesc = jsonObj["target_location_description"]
+        self.endLoc = tuple(jsonObj["target_coordinates"])
+
+    def __str__(self):
+        return (
+            f"Thought ID: {self.thoughtId}\n"
+            f"Date: {self.dayInt}\n"
+            f"Time: {self.timeInt}\n"
+            f"Start Location: {self.startLoc}\n"
+            f"Thought: {self.thoughtText}\n"
+            f"Action: {self.action}\n"
+            f"Location: {self.location}\n"
+            f"Location Description: {self.locationDesc}\n"
+            f"End Location: {self.endLoc}\n"
+        )
+
+
+
+
+
+
+        
 
 class Memory:
     memoryDesc = ""
