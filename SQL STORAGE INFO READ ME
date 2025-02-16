@@ -1,0 +1,21 @@
+As of right now, I am running the SQL server on my machine.  
+I used the Flask API so we can add and retrieve thoughts easily through HTTP requests. This allows data to be remotely stored and retrieved while the server is running on my machine.
+
+** Important Note on Access**
+- The Flask API is only accessible while my machine is running.
+- Teammates CANNOT access the API locally (`http://127.0.0.1:5000/` will NOT work for you).
+- If you need to interact with the API, use the remote Ngrok link that I will provide. (If you need me to turn it on contact me)
+
+---
+
+ ** How It Works**
+1. Flask API (`server.py`): Handles requests from the simulation and interacts with MySQL.
+2. Simulation (`driver0.py`): Generates thoughts and sends them to the Flask API.
+3. MySQL Database: Stores all thoughts persistently. (ran locally on Greyson's machine but could change in future)
+
+---
+ ** How Data Flows**
+- When `server.py` is started, it connects to the Flask API and listens for incoming HTTP requests from `driver0.py`.
+- The simulation (`driver0.py`) sends thoughts via an API request to `server.py`.
+- Flask processes these requests and stores/retrieves data in MySQL table.
+- Teammates can retrieve stored thoughts, but only through an Ngrok-provided public link (temporary solution).
