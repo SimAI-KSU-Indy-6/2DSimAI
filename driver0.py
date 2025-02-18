@@ -59,7 +59,31 @@ try:
     print(response.choices[0].message.content)
 
     agents[0].appendThought(response.choices[0].message.content, startTime)
+
+    memoryPrompt = []
+    memoryPrompt.append(agents[0].prepMemoryPrompt())
+
     print(agents[0].thoughts[0])
+
+    print(memoryPrompt)
+
+    response = client.chat.completions.create(
+        model="gemini-1.5-flash",
+        messages=[
+            {"role": "system", "content": "You are the following character, respond accordingly: " + agents[0].description}, # Corrected to use single string role
+            {"role": "user", "content": memoryPrompt[-1]}
+        ]
+    )
+
+    currentRawMemory = response.choices[0].message.content
+    agents[0].appendMemory(agents[0].thoughts[-1], currentRawMemory)
+
+    print("MEMORY Object ----------------------------------")
+
+    print(agents[0].memories[-1])
+
+    
+
 
 except Exception as e:
     print(f"An error occurred: {e}") # Handle and print any exceptions

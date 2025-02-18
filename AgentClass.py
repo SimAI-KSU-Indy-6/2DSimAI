@@ -9,6 +9,8 @@ class Agent:
     currentMapLocation = "N/A" #Translating current Map tile to description for prompting
     currentMapTile = ""
     thoughts = []
+    memories = []
+    rawMemories = []
 
     def __init__(self, name="N/A", description="N/A", location=(1, 1)):
         self.id = Agent.next_id  # Assign the current ID to the agent
@@ -78,6 +80,14 @@ class Agent:
         self.thoughts.append(currThought)
         self.location = currThought.endLoc
 
+    def prepMemoryPrompt(self):
+        return f"{Memory.memorySummarizePrompt} \n {str(self.thoughts[-1])} {Memory.memoryScorePrompt} {Memory.memoryJsonPrompt}"
+    
+    def appendMemory(self, thoughtObject, rawMemory):
+        currMemory = Memory(thoughtObject, rawMemory)
+        self.memories.append(currMemory)
+
+
 class Thought:
     nextThoughtId = 0
     thoughtText = "N/A"
@@ -129,6 +139,38 @@ class Thought:
         
 
 class Memory:
+    memorySummarizePrompt = "Being brief, Summarize your provided thought in the first past tense along with a location."
+    memoryScorePrompt = """
+    Provide sentimentScore, frequencyScore, and importanceScore for the given thought.
+
+    sentimentScore (0-10): Emotional Intensity
+
+    High (7-10): Strong emotions (joy, excitement, love, fear, anger, sadness). Major life events, passionate moments, traumatic experiences. Example: "I won the lottery!"
+    Medium (4-6): Moderate emotional involvement. Everyday events (pleasant conversation, frustrating commute). Example: "I had lunch with a friend."
+    Low (0-3): Largely factual or unemotional. Routine actions (brushing teeth, noting the weather). Example: "The meeting is at 2 PM."
+    frequencyScore (0-10): Recall Frequency
+
+    High (7-10): Frequently recalled memories. Recurring problems, cherished childhood memories.
+    Medium (4-6): Occasionally recalled memories.
+    Low (0-3): Rarely recalled memories. This score can increase with each recall, up to a maximum.
+    importanceScore (0-10): Personal Importance
+
+    High (7-10): Significant impact on life, identity, or goals. Graduating college, getting married, major accomplishments.
+    Medium (4-6): Relevant but not life-changing.
+    Low (0-3): Trivial or insignificant.
+    """
+    memoryJsonPrompt = """
+        Provide your response in JSON format, like this example:
+
+        {
+        "memoryDesc": "...",
+        "location": "...",
+        "sentimentScore": 2.5,
+        "frequencyScore": 8,
+        "importanceScore": 3.2
+        }
+
+    """
     memoryDesc = ""
     location = ""
     day = 20231221 #example integer for day
@@ -137,3 +179,31 @@ class Memory:
     recencyScore = 10 #same as above; automatically decay when recalling
     frequencyScore = 8 #same ^ trying to measure if the memory is reoccuring
     importanceScore = 3.2 #measure of memory is viewed as important to the agent.
+
+    def __init__(self, thoughtObject, memoryString="N/A"):
+        self.memoryId = thoughtObject.thoughtId
+        self.dayInt = thoughtObject.dayInt
+        self.timeInt = thoughtObject.timeInt
+        startJsonIndex = memoryString.find("{")
+        endJsonIndex = memoryString.find("}")+1
+        print(f"JSON String:\n{memoryString}")
+        print(f"JSON String Formatted:\n{memoryString[startJsonIndex:endJsonIndex+1]}")
+        
+        jsonObj = json.loads(memoryString[startJsonIndex:endJsonIndex+1])
+        self.memoryDesc = jsonObj["memoryDesc"]
+        self.location = jsonObj["location"]
+        self.sentimentScore = jsonObj["sentimentScore"]
+        self.frequencyScore = jsonObj["frequencyScore"]
+        self.importanceScore = jsonObj["importanceScore"]
+
+    def __str__(self):
+        return (
+            f"Memory ID: {self.memoryId}\n"
+            f"Memory Date: {self.dayInt}\n"
+            f"Time: {self.timeInt}\n"
+            f"Start Location: {self.location}\n"
+            f"Memory Desc: {self.memoryDesc}\n"
+            f"Sentiment Score: {self.sentimentScore}\n"
+            f"Frequency Score: {self.frequencyScore}\n"
+            f"Importance Score: {self.importanceScore}\n"
+        )
