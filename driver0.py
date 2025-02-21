@@ -33,7 +33,7 @@ prompts = []
 for agent in agents:
     agent.update_map_info(mapFile.allMap, mapFile.tile_definitions)
 
-    currentAgentMap = mapFile.agentMap(agent.location[0], agent.location[1])
+    currentAgentMap = mapFile.agentMap(agent.location[0], agent.location[1]) #split x and y coordinates of location variable
     print("\nAGENT INFO::-------------------------")
     print(agent)
     

@@ -1,4 +1,16 @@
 import json
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
+import mapFile
+
+load_dotenv()
+gemini_key = os.environ["GEMINI_KEY"]
+
+client = OpenAI(
+    api_key=gemini_key,
+    base_url="https://generativelanguage.googleapis.com/v1beta/"
+)
 
 class Agent:
     next_id = 0  # Class-level variable to store the next ID
@@ -54,6 +66,7 @@ class Agent:
         )
     
     def prepPrompt(self, mapString, definitionString):
+
         mapContext = "Use the following map and map key to get context for your environment the 'CHAR' is your current position: \n" + mapString + "\nKey: " + definitionString
 
         jsonFormatInstruct = """ Provide your response in JSON format, like this example:
@@ -80,13 +93,50 @@ class Agent:
         self.thoughts.append(currThought)
         self.location = currThought.endLoc
 
-    def prepMemoryPrompt(self):
-        return f"{Memory.memorySummarizePrompt} \n {str(self.thoughts[-1])} {Memory.memoryScorePrompt} {Memory.memoryJsonPrompt}"
+    def prepMemoryPrompt(self, index=-1):
+        return f"{Memory.memorySummarizePrompt} \n {str(self.thoughts[index])} {Memory.memoryScorePrompt} {Memory.memoryJsonPrompt}"
     
     def appendMemory(self, thoughtObject, rawMemory):
         currMemory = Memory(thoughtObject, rawMemory)
         self.memories.append(currMemory)
 
+    def getHighestMemories(self):
+        memoriesNum = len(self.memories)
+        if memoriesNum == 0:
+            return "No memories"
+        elif memoriesNum <= 5:
+            return str(self.memories)
+        else:
+            #Sort memories by total score, return top 5
+            sortedMemories = sorted(self.memories, key=lambda x: x.totalScore, reverse=True)
+            return str(sortedMemories[5:])
+
+    def generateThoughtResponse(self, dateString, timeString, dateTimeObj):
+        currentAgentMap = mapFile.agentMap(self.location[0], self.location[1])
+        agentContentPrompt = self.prepPrompt(currentAgentMap, mapFile.tileDefToString)
+        response = client.chat.completions.create(
+            model="gemini-1.5-flash",
+            messages=[
+                {"role": "system", "content": self.getRolePrompt(dateString + " " + timeString)}, # Corrected to use single string role
+                {"role": "user", "content": agentContentPrompt}
+            ]
+        )
+        self.appendThought(response.choices[0].message.content,dateTimeObj)
+        return response.choices[0].message.content
+    
+    def generateMemory(self, index = -1):
+        prompt = self.prepMemoryPrompt(index)
+        response = client.chat.completions.create(
+            model="gemini-1.5-flash",
+            messages=[
+                {"role": "system", "content": "You are the following character, respond accordingly: " + self.description}, # Corrected to use single string role
+                {"role": "user", "content": prompt}
+            ]
+        )
+        rawMemory = (response.choices[0].message.content)
+        self.appendMemory(self.thoughts[index], rawMemory)
+
+        return response.choices[0].message.content
 
 class Thought:
     nextThoughtId = 0
@@ -195,6 +245,8 @@ class Memory:
         self.sentimentScore = jsonObj["sentimentScore"]
         self.frequencyScore = jsonObj["frequencyScore"]
         self.importanceScore = jsonObj["importanceScore"]
+        self.recencyScore = 10.0
+        self.totalScore = self.getTotalMemoryScore()
 
     def __str__(self):
         return (
@@ -207,3 +259,10 @@ class Memory:
             f"Frequency Score: {self.frequencyScore}\n"
             f"Importance Score: {self.importanceScore}\n"
         )
+    
+    def reduceRecencyScore(self): #Meant to be ran every 15 minutes
+        if self.recencyScore > 1.1:
+            recencyScore -= .007
+    
+    def getTotalMemoryScore(self):
+        return self.sentimentScore * self.frequencyScore * self.importanceScore * self.recencyScore
