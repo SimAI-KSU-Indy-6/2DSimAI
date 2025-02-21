@@ -1,4 +1,3 @@
-
 from AgentClass import Agent, Thought, Memory
 import mapFile
 import datetime
