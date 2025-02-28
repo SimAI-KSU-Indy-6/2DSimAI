@@ -56,7 +56,8 @@ def betterPadList(twoDList):
             else:
                 padded_item = item 
 
-            row_string += padded_item  
+            #row_string += "[" + padded_item + "],"    #Provided decent results.
+            row_string += "'" + padded_item + "',"
             if colIndex < len(twoDList[rowIndex]) -1: 
                 row_string += " "
 
@@ -66,8 +67,13 @@ def betterPadList(twoDList):
 
 paddedDefaultMap = betterPadList(allMap)
 
-def agentMap(x, y):
-    tempAllMap = allMap
+def agentMap(x, y, agents):
+    tempAllMap = [row[:] for row in allMap]
     tempAllMap[x][y] = "CHAR"
 
+    for agent in agents:
+        agentX = agent.location[0]
+        agentY = agent.location[1]
+
+        tempAllMap[agentX][agentY] = agent.name
     return betterPadList(tempAllMap)

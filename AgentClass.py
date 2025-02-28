@@ -65,14 +65,35 @@ class Agent:
             f"Thoughts: {self.thoughts}\n"
         )
     
-    def prepPrompt(self, mapString, definitionString):
+    def getHighestMemoriesString(self):
 
-        mapContext = "Use the following map and map key to get context for your environment the 'CHAR' is your current position: \n" + mapString + "\nKey: " + definitionString
+        memoryContext = self.getHighestMemories()
+
+        memoryString = "No Recent Memories."
+
+        if(len(self.thoughts) > 4):
+            if(len(memoryContext) != 0):
+                memoryString = ""
+                for memory in memoryContext:
+                    memoryString += str(memory) + "\n"
+
+        return memoryString
+
+    
+    def prepPrompt(self, mapString, definitionString, agents):
+
+        mapContext = "You are navigating a grid-based map. The top-left corner is (0, 0). Each blank tile in the map is represented by exactly four literal spaces (from left to right). X increases to the right, and Y increases downwards. Use the following map and map key to get context for your environment the 'CHAR' is your current position ( "+ str(self.location[0]) +"," + str(self.location[1]) + "): \n" + mapString + "\nKey: " + definitionString
+
+        memoryString = self.getHighestMemoriesString()
+                
+
+        memoryPrompt = " Use the following list of memories for context of past events, IMPORTANT:: ensure your actions not repetitive based on time from previous memories unless absolutely necessary ::. "
 
         jsonFormatInstruct = """ Provide your response in JSON format, like this example:
 
         ```json
         {
+        "response_type": "thought",
         "thought": "...",
         "action_description": "...",
         "target_location": "...",
@@ -81,17 +102,60 @@ class Agent:
         }
         """
 
-        prompt = mapContext + "\nProvide a single short thought as if you were the character in this situation and detail the next movement of the character based on the map and current position." + jsonFormatInstruct
+        agentsInTheArea = []
+
+        for agent in agents:
+            currentX = self.location[0]
+            currentY = self.location[1]
+            if(agent.name != self.name):
+                if agent.location[0] >= currentX - 3 and agent.location[0] <= currentX + 3:
+                    if agent.location[1] >= currentX - 3 and agent.location[1] <= currentY + 3:
+                        agentsInTheArea.append(agent.name)
+
+        jsonFormatInstructConverse = """ Alternatively, If you want to initiate a conversation, Provide your response in JSON format, like this example:
+
+        ```json
+        {
+        "response_type": "converse",
+        "agent": "...",
+        "initial_message": "...",
+        "target_coordinates": [row, column]
+        }
+        """
+        #TODO: CHECK Length of list names then do conditional to provide converse prompt or regular prompt.
+        prompt = memoryPrompt + memoryString + mapContext + "\nProvide a single short thought as if you were the character in this situation and detail the next movement of the character based on the map and current position." + jsonFormatInstruct
+
+
+        if len(agentsInTheArea) > 0:
+            surroundingAgents = "The following agents are close enough to start a conversation: " + str(agentsInTheArea)
+            prompt += surroundingAgents + jsonFormatInstructConverse
+            
+        print(prompt)
         return prompt
     
     def getRolePrompt(self, fullDateString):
         role = f"You are the following character: {self.description}, It is currently {fullDateString} and you are currently on {self.currentMapLocation}" # Made role a single string
         return role
     
-    def appendThought(self, thoughtString, dateTimeObj):
-        currThought = Thought(dateTimeObj, thoughtString, self.location)
-        self.thoughts.append(currThought)
-        self.location = currThought.endLoc
+    def appendThought(self, thoughtString, dateTimeObj, agents):
+        startJsonIndex = thoughtString.find("{")
+        endJsonIndex = thoughtString.find("}")+1        
+        jsonObj = json.loads(thoughtString[startJsonIndex:endJsonIndex+1])
+        print(str(jsonObj))
+
+        if(jsonObj["response_type"] == "converse"):
+            targetAgent = ""
+            for agent in agents:
+                if agent.name == jsonObj["agent"]:
+                    targetAgent = agent
+            conversationObj = Conversation(self, jsonObj, dateTimeObj, targetAgent)
+
+        elif(jsonObj["response_type"] == "thought"):
+            currThought = Thought(dateTimeObj, thoughtString, self.location)
+            self.thoughts.append(currThought)
+            self.location = currThought.endLoc
+        else:
+            print("invalid response")
 
     def prepMemoryPrompt(self, index=-1):
         return f"{Memory.memorySummarizePrompt} \n {str(self.thoughts[index])} {Memory.memoryScorePrompt} {Memory.memoryJsonPrompt}"
@@ -103,17 +167,17 @@ class Agent:
     def getHighestMemories(self):
         memoriesNum = len(self.memories)
         if memoriesNum == 0:
-            return "No memories"
+            return []
         elif memoriesNum <= 5:
-            return str(self.memories)
+            return self.memories
         else:
             #Sort memories by total score, return top 5
             sortedMemories = sorted(self.memories, key=lambda x: x.totalScore, reverse=True)
-            return str(sortedMemories[5:])
+            return sortedMemories[:5]
 
-    def generateThoughtResponse(self, dateString, timeString, dateTimeObj):
-        currentAgentMap = mapFile.agentMap(self.location[0], self.location[1])
-        agentContentPrompt = self.prepPrompt(currentAgentMap, mapFile.tileDefToString)
+    def generateThoughtResponse(self, dateString, timeString, dateTimeObj, agents):
+        currentAgentMap = mapFile.agentMap(self.location[0], self.location[1], agents)
+        agentContentPrompt = self.prepPrompt(currentAgentMap, mapFile.tileDefToString, agents)
         response = client.chat.completions.create(
             model="gemini-1.5-flash",
             messages=[
@@ -121,10 +185,13 @@ class Agent:
                 {"role": "user", "content": agentContentPrompt}
             ]
         )
-        self.appendThought(response.choices[0].message.content,dateTimeObj)
+        self.appendThought(response.choices[0].message.content,dateTimeObj, agents)
         return response.choices[0].message.content
     
     def generateMemory(self, index = -1):
+        if(len(self.thoughts) == 0):
+            print("Not thoughts for agent" + self.name)
+            return
         prompt = self.prepMemoryPrompt(index)
         response = client.chat.completions.create(
             model="gemini-1.5-flash",
@@ -137,6 +204,11 @@ class Agent:
         self.appendMemory(self.thoughts[index], rawMemory)
 
         return response.choices[0].message.content
+    
+    def updateMemoryRecency(self):
+        if(len(self.memories) >= 1):
+            for memory in self.memories:
+                memory.reduceRecencyScore()
 
 class Thought:
     nextThoughtId = 0
@@ -158,8 +230,8 @@ class Thought:
 
         startJsonIndex = thoughtString.find("{")
         endJsonIndex = thoughtString.find("}")+1
-        print(f"JSON String:\n{thoughtString}")
-        print(f"JSON String Formatted:\n{thoughtString[startJsonIndex:endJsonIndex+1]}")
+        #print(f"JSON String:\n{thoughtString}")
+        #print(f"JSON String Formatted:\n{thoughtString[startJsonIndex:endJsonIndex+1]}")
         
         jsonObj = json.loads(thoughtString[startJsonIndex:endJsonIndex+1])
         self.thoughtText = jsonObj["thought"]
@@ -226,7 +298,7 @@ class Memory:
     day = 20231221 #example integer for day
     time = 1430 #military time example for 2:30PM
     sentimentScore = 2.5 #double between 0-10 - measures if memory is emotional
-    recencyScore = 10 #same as above; automatically decay when recalling
+    #recencyScore = 10 #same as above; automatically decay when recalling
     frequencyScore = 8 #same ^ trying to measure if the memory is reoccuring
     importanceScore = 3.2 #measure of memory is viewed as important to the agent.
 
@@ -236,8 +308,8 @@ class Memory:
         self.timeInt = thoughtObject.timeInt
         startJsonIndex = memoryString.find("{")
         endJsonIndex = memoryString.find("}")+1
-        print(f"JSON String:\n{memoryString}")
-        print(f"JSON String Formatted:\n{memoryString[startJsonIndex:endJsonIndex+1]}")
+        #print(f"JSON String:\n{memoryString}")
+        #print(f"JSON String Formatted:\n{memoryString[startJsonIndex:endJsonIndex+1]}")
         
         jsonObj = json.loads(memoryString[startJsonIndex:endJsonIndex+1])
         self.memoryDesc = jsonObj["memoryDesc"]
@@ -258,11 +330,72 @@ class Memory:
             f"Sentiment Score: {self.sentimentScore}\n"
             f"Frequency Score: {self.frequencyScore}\n"
             f"Importance Score: {self.importanceScore}\n"
+            f"Overall Memory Score: {self.totalScore}\n"
         )
     
     def reduceRecencyScore(self): #Meant to be ran every 15 minutes
         if self.recencyScore > 1.1:
-            recencyScore -= .007
+            self.recencyScore -= .007
+            self.totalScore = self.getTotalMemoryScore()
     
     def getTotalMemoryScore(self):
         return self.sentimentScore * self.frequencyScore * self.importanceScore * self.recencyScore
+    
+
+class Conversation:
+    nextConvId = 0
+    def __init__(self, startAgent, jsonObj, dateTimeObj, targetAgent):
+        self.ConversationId = Conversation.nextConvId
+        self.startAgentId = startAgent.id
+        self.startAgentName = startAgent.name
+        self.targetAgentId = targetAgent.id
+        self.targetAgentName = targetAgent.name
+        self.startAgentObj = startAgent
+        self.targetAgentObj = targetAgent
+        self.dateTimeObj = dateTimeObj
+        self.initMessage = jsonObj["initial_message"]
+        self.targetCoordinate = jsonObj["target_coordinates"]
+        self.rawConversation = self.generateConversation()
+        
+        Conversation.nextConvId += 1
+
+    def generateConversation(self):
+        role = "You are facilitating conversation between two agents. " + self.startAgentName + " and " + self.targetAgentName + ". The first message from " + self.startAgentName + " is : " + self.initMessage
+        instruct = "Generate a conversation between the two agents using the following descriptions and top memories."
+        startAgentDesc = self.startAgentObj.description + " Top Memories: " + self.startAgentObj.getHighestMemoriesString()
+        targetAgentDesc = self.targetAgentObj.description + " Top Memories: " + self.targetAgentObj.getHighestMemoriesString()
+        outputGuidance = "output the conversation in the following JSON format" + """
+        {
+        "turns": [
+            {
+            "speaker": "Agent1", 
+            "text": "Initial statement or question to start the conversation.",
+            "emotion": "neutral or appropriate emotion"
+            },
+            {
+            "speaker": "Agent2",
+            "text": "Response to the initial statement or question.",
+            "emotion": "neutral or appropriate emotion"
+            },
+            {
+            "speaker": "Agent1",
+            "text": "Further response or a new statement/question.",
+            "emotion": "neutral or appropriate emotion"
+            }
+            // ... more turns
+        ]
+        }    
+        """
+        contentOutput = instruct + startAgentDesc + targetAgentDesc + outputGuidance
+        
+
+
+        response = client.chat.completions.create(
+            model="gemini-1.5-flash",
+            messages=[
+                {"role": "system", "content": role}, # Corrected to use single string role
+                {"role": "user", "content": contentOutput}
+            ]
+        )
+        print(response.choices[0].message.content)
+        return response.choices[0].message.content
