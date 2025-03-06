@@ -39,9 +39,12 @@ export class Preloader extends Scene
         
         // Actual Tilemap assets
         this.load.image('ground', 'A2_Ground.png');
+        this.load.image('exteriors', 'Modern_Exteriors_Complete_Tileset_32x32.png');
         
         // Load tilemap JSON
-        this.load.tilemapTiledJSON('tilemap', 'map.json');
+        // this.load.tilemapTiledJSON('tilemap', 'map.json');
+        this.load.tilemapTiledJSON('tilemap', 'world.json');
+
     }
 
     create ()
@@ -59,11 +62,21 @@ export class Preloader extends Scene
         const map = this.make.tilemap({ key: 'tilemap' })
         
         // add the tileset image we are using
-        const grass_ts = map.addTilesetImage('A2_Ground', 'ground')
+        const grass_ts = map.addTilesetImage('Modern_Exteriors_Complete_Tileset_32x32', 'exteriors')
         
         // create the layers we want in the right order (FIRST PART MUST BE TILED LAYER NAME)
-        map.createLayer('Tile Layer 1', grass_ts) 
-        
+        if (grass_ts != null) {
+            map.createLayer('base', grass_ts) 
+            map.createLayer('road', grass_ts)
+            map.createLayer('foilage_2', grass_ts) 
+            map.createLayer('foilage', grass_ts) 
+            map.createLayer('fence', grass_ts)
+            map.createLayer('buildings', grass_ts)
+            map.createLayer('building_front', grass_ts)
+            map.createLayer('detail', grass_ts)
+
+
+        }
         
         // the remaining tile layers ...    
     }
