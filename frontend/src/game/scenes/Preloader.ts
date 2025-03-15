@@ -45,39 +45,36 @@ export class Preloader extends Scene
         // this.load.tilemapTiledJSON('tilemap', 'map.json');
         this.load.tilemapTiledJSON('tilemap', 'world.json');
 
+
+        // Load character atlases
+        this.load.atlas('zeke', 'zeke.png', 'zeke.json')
+
     }
 
     create ()
     {
         //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
         //  For example, you can define global animations here, so we can use them in other scenes.
-
-        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        // this.scene.start('MainMenu');
-        
-        // Sanity Check
-        // this.add.image(0,0, 'C_OutSide_Nature');
         
         // create the Tilemap
-        const map = this.make.tilemap({ key: 'tilemap' })
+        // const map = this.make.tilemap({ key: 'tilemap' })
         
-        // add the tileset image we are using
-        const grass_ts = map.addTilesetImage('Modern_Exteriors_Complete_Tileset_32x32', 'exteriors')
+        // // add the tileset image we are using
+        // const grass_ts = map.addTilesetImage('Modern_Exteriors_Complete_Tileset_32x32', 'exteriors')
         
-        // create the layers we want in the right order (FIRST PART MUST BE TILED LAYER NAME)
-        if (grass_ts != null) {
-            map.createLayer('base', grass_ts) 
-            map.createLayer('road', grass_ts)
-            map.createLayer('foilage_2', grass_ts) 
-            map.createLayer('foilage', grass_ts) 
-            map.createLayer('fence', grass_ts)
-            map.createLayer('buildings', grass_ts)
-            map.createLayer('building_front', grass_ts)
-            map.createLayer('detail', grass_ts)
-
-
-        }
+        // // create the layers we want in the right order (FIRST PART MUST BE TILED LAYER NAME)
+        // if (grass_ts != null) {
+        //     map.createLayer('base', grass_ts) 
+        //     map.createLayer('road', grass_ts)
+        //     map.createLayer('foliage_2', grass_ts) 
+        //     map.createLayer('foilage', grass_ts) 
+        //     map.createLayer('fence', grass_ts)
+        //     map.createLayer('buildings', grass_ts)
+        //     map.createLayer('building_front', grass_ts)
+        //     map.createLayer('detail', grass_ts)
+        // }
         
-        // the remaining tile layers ...    
+        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
+        this.scene.start('Game');
     }
 }
