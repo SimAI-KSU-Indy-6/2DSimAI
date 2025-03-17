@@ -109,11 +109,11 @@ function App()
             .then((data) => {
                 console.log('Simulation Step Response:', data);
                 // Update UI or game based on response
-                if (phaserRef.current && phaserRef.current.scene) {
+                /*if (phaserRef.current && phaserRef.current.scene) {
                     phaserRef.current.scene.add.text(100, 100, 'Simulation step completed: ' + data.time, {
                         color: '#ffffff',
                     });
-                }
+                }*/
             })
             .catch((error) => {
                 console.error('Error:', error);
