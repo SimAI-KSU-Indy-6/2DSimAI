@@ -14,25 +14,18 @@ client = OpenAI(
 
 class Agent:
     next_id = 0  # Class-level variable to store the next ID
-    next_thought_id = 0
-    name = "N/A"
-    description = "N/A"
-    location = (1,1)
-    currentMapLocation = "N/A" #Translating current Map tile to description for prompting
-    currentMapTile = ""
-    thoughts = []
-    memories = []
-    rawMemories = []
 
     def __init__(self, name="N/A", description="N/A", location=(1, 1)):
         self.id = Agent.next_id  # Assign the current ID to the agent
-        Agent.next_id += 1      # Increment the next ID for the next agent
         self.name = name
         self.description = description
         self.location = location
         self.currentMapLocation = "N/A"
         self.currentMapTile = ""
         self.thoughts = []
+        self.memories = []
+
+        Agent.next_id += 1      # Increment the next ID for the next agent
 
     def update_map_info(self, game_map, tile_definitions): #Update the 2D map to place Character Info
         row, col = self.location 
@@ -122,7 +115,6 @@ class Agent:
         "target_coordinates": [row, column]
         }
         """
-        #TODO: CHECK Length of list names then do conditional to provide converse prompt or regular prompt.
         prompt = memoryPrompt + memoryString + mapContext + "\nProvide a single short thought as if you were the character in this situation and detail the next movement of the character based on the map and current position." + jsonFormatInstruct
 
 
@@ -212,14 +204,6 @@ class Agent:
 
 class Thought:
     nextThoughtId = 0
-    thoughtText = "N/A"
-    action = "N/A"
-    location = "N/A"
-    locationDesc = "N/A"
-    startLoc = (1,1)
-    endLoc = (1,2)
-    dayInt = 20231221 #example integer for day
-    timeInt = 1430 #military time example for 2:30PM
 
     def __init__(self, dateTimeObj, thoughtString="N/A", sLoc = (1,1)):
         self.thoughtId = Thought.nextThoughtId  
@@ -293,14 +277,6 @@ class Memory:
         }
 
     """
-    memoryDesc = ""
-    location = ""
-    day = 20231221 #example integer for day
-    time = 1430 #military time example for 2:30PM
-    sentimentScore = 2.5 #double between 0-10 - measures if memory is emotional
-    #recencyScore = 10 #same as above; automatically decay when recalling
-    frequencyScore = 8 #same ^ trying to measure if the memory is reoccuring
-    importanceScore = 3.2 #measure of memory is viewed as important to the agent.
 
     def __init__(self, thoughtObject, memoryString="N/A"):
         self.memoryId = thoughtObject.thoughtId
