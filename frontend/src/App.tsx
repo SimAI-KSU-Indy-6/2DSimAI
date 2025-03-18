@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { MainMenu } from './game/scenes/MainMenu';
 
+import { EventBus } from './game/EventBus';
+
 function App()
 {
 
@@ -108,12 +110,6 @@ function App()
             .then((response) => response.json())
             .then((data) => {
                 console.log('Simulation Step Response:', data);
-                // Update UI or game based on response
-                /*if (phaserRef.current && phaserRef.current.scene) {
-                    phaserRef.current.scene.add.text(100, 100, 'Simulation step completed: ' + data.time, {
-                        color: '#ffffff',
-                    });
-                }*/
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -123,6 +119,40 @@ function App()
                     });
                 }
             });
+
+
+        fetch('http://localhost:8000/agents/', {
+            method: 'GET',
+        })
+            .then((response) => response.json())
+            .then((character_data) => {
+                console.log('Character Data:', character_data);
+    
+                // Ensure data is an array before iterating
+                if (Array.isArray(character_data)) {
+                    for (const character of character_data) {
+                        if (character && character.location && Array.isArray(character.location) && character.location.length === 2) {
+                            const [x, y] = character.location; // Extract x and y
+                            
+                            // Emit event for character movement
+                            EventBus.emit('move-character', { id: character.id, name: character.name, x, y });
+                        } else {
+                            console.warn("Invalid character data:", character);
+                        }
+                    }
+                } else {
+                    console.error("Unexpected response format, expected an array:", character_data);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                if (phaserRef.current && phaserRef.current.scene) {
+                    phaserRef.current.scene.add.text(100, 100, 'Character Data Error', {
+                        color: '#ffffff',
+                    });
+                }
+            });
+            
     };
     
 
@@ -130,7 +160,7 @@ function App()
         <div id="app">
             <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
             <div>
-                <div>
+                {/* <div>
                     <button className="button" onClick={changeScene}>Change Scene</button>
                 </div>
                 <div>
@@ -141,15 +171,15 @@ function App()
                 </div>
                 <div>
                     <button className="button" onClick={addSprite}>Add New Sprite</button>
-                </div>
+                </div> */}
                 <div>
                     <button className="button" onClick={goToDevScene}>
                         {isDevSceneActive ? 'Hide Dev Scene' : 'Show Dev Scene'}
                     </button>
                 </div>
-                <div>
+                {/* <div>
                     <button disabled={true} className="button" onClick={goToGameScene}>Game Scene</button>
-                </div>
+                </div> */}
                 <div>
                     <button className="button" onClick={handleStepSimulation}>
                         Step Simulation

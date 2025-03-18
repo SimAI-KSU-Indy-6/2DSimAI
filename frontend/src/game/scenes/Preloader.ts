@@ -48,6 +48,7 @@ export class Preloader extends Scene
 
         // Load character atlases
         this.load.atlas('zeke', 'zeke.png', 'zeke.json')
+        this.load.atlas('amy', 'amy.png', 'amy.json')
 
     }
 

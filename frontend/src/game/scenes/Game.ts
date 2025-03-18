@@ -16,22 +16,14 @@ export class Game extends Scene
 
     create ()
     {
-       this.camera = this.cameras.main;
-    //    this.camera.setBackgroundColor(0x00ff00);
+        this.camera = this.cameras.main;
 
-    //    this.background = this.add.image(512, 384, 'background');
-    //    this.background.setAlpha(0.5);
 
-    //    this.gameText = this.add.text(512, 384, 'Make something fun!\nand share it with us:\nsupport@phaser.io', {
-    //        fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
-    //        stroke: '#000000', strokeThickness: 8,
-    //        align: 'center'
-    //    }).setOrigin(0.5).setDepth(100);
-       const map = this.make.tilemap({ key: 'tilemap' })
-        
+        const map = this.make.tilemap({ key: 'tilemap' })
+
         // add the tileset image we are using
         const grass_ts = map.addTilesetImage('Modern_Exteriors_Complete_Tileset_32x32', 'exteriors')
-        
+
         // create the layers we want in the right order (FIRST PART MUST BE TILED LAYER NAME)
         if (grass_ts != null) {
             map.createLayer('base', grass_ts) 
@@ -44,52 +36,38 @@ export class Game extends Scene
             map.createLayer('detail', grass_ts)
         }
 
-       const zeke = new Townsperson(this, 100, 200, "Zeke", "zeke");
+        //initialize joey
+        const Joey = new Townsperson(this, 50, 50, "Zeke", "zeke");
 
-       this.characters.push(zeke);
-       this.characters[0].setupAnimations(this);
-    /*
-       const devButton = this.add.dom(this.cameras.main.width - 100, 50).createFromHTML('<button>Dev Scene</button>');
-        devButton.addListener('click');
-        devButton.on('click', () => {
-            this.scene.start('Dev');
+        this.characters.push(Joey);
+        this.characters[0].setupAnimations(this);
+
+        //initialize amy
+        const Amy = new Townsperson(this, 100, 50, "Amy", "amy");
+
+        this.characters.push(Amy);
+        this.characters[1].setupAnimations(this);
+
+        // Listen for the move event
+        EventBus.on('move-character', (data: { id: number, name: string, x: number, y: number }) => {
+            console.log(`Moving ${data.name} (ID: ${data.id}) to (${data.x}, ${data.y})`);
+            this.characters[data.id].moveTo((data.x * 32), (data.y * 32));
         });
 
-       const StepButton = this.add.dom(100, 50).createFromHTML('<button>Step Simulation</button>');
-
-       StepButton.addListener('click');
-        StepButton.on('click', () => {
-            // Send POST request
-            fetch('http://127.0.0.1:8000/step_simulation/', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Simulation Step Response:", data);
-                // Update UI or game based on response
-                this.add.text(100, 100, "Simulation step completed: " + data.time, { color: '#ffffff' });
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                this.add.text(100, 100, "Simulation step failed", { color: '#ffffff' });
-            });
-        });
-        */
-
-       EventBus.emit('current-scene-ready', this);
+        EventBus.emit('current-scene-ready', this);
     }
 
     update() {
         // Example: Move a character if a condition is met
-        if (Phaser.Input.Keyboard.JustDown(this.input.keyboard!.addKey("W"))) {
-            let frameNames = this.textures.get("zeke").getFrameNames();
-            console.log(frameNames);
-        }
+        // if (Phaser.Input.Keyboard.JustDown(this.input.keyboard!.addKey("W"))) {
+        //     let frameNames = this.textures.get("zeke").getFrameNames();
+        //     console.log(frameNames);
+        // }
 
-        if (Phaser.Input.Keyboard.JustDown(this.input.keyboard!.addKey("SPACE"))) {
-            this.characters[0].moveTo(400, 300); // Moves Zeke to (400, 300)
-            //this.characters[0].playAnimation('walk');
-        }
+        // if (Phaser.Input.Keyboard.JustDown(this.input.keyboard!.addKey("SPACE"))) {
+        //     this.characters[0].moveTo(400, 300); // Moves Zeke to (400, 300)
+        //     //this.characters[0].playAnimation('walk');
+        // }
 
     }
 

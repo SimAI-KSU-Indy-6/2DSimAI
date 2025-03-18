@@ -6,6 +6,7 @@ export class Townsperson extends Phaser.GameObjects.Sprite {
 
     constructor(scene: Phaser.Scene, x: number, y: number, name: string, characterType: string) {
         super(scene, x, y, characterType);
+        this.scene = scene;
         scene.add.existing(this);
         this.name = name;
         this.characterType = characterType;
@@ -71,16 +72,15 @@ export class Townsperson extends Phaser.GameObjects.Sprite {
                 let animationKey: string;
                 const directionalActions = ["walk", "stand", "default", "pickup", "sit", "phone"];
             
-                if (directionalActions.includes(action) && action === 'walk') {
-                    animationKey = `${this.characterType}-${action}_${this.facingDirection}`;
-                } else if (directionalActions.includes(action) && action !== 'walk') {
+                if (directionalActions.includes(action)) {
                     animationKey = `${this.characterType}-${action}_${this.facingDirection}`;
                 } else {
                     animationKey = `${this.characterType}-${action}`;
                 }
             
-                if (this.anims.exists(animationKey)) {
-                    this.anims.play(animationKey, true);
+                // Ensure the animation exists before playing
+                if (this.scene.anims.exists(animationKey)) {
+                    this.play(animationKey, true);
                 } else {
                     console.warn(`Animation '${animationKey}' not found for ${this.name}`);
                 }
