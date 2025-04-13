@@ -74,13 +74,13 @@ def getTimeString(startTime):
 agents.append(Agent( #Name, Desc, Location
         "Joey",
         "Joey, a 22-year-old college student, lives for the dream of rock stardom.  His beat-up Epiphone Les Paul is his constant companion, a conduit for the raw energy he admires in his idol, Jimmy Page.  Hes a quiet, laid-back guy until the conversation turns to music, at which point his passion ignites.  Constantly daydreaming of stadium lights and roaring crowds, Joey channels his Zeppelin-inspired ambitions into original riffs, aiming for epic compositions.  He struggles to find bandmates who share his deep appreciation for classic rock; most of his peers are into more contemporary genres.  Driven by the desire to create something legendary, something timeless, Joey seeks to resurrect rock and roll with his own music, fueled by a belief in its enduring power.",
-        (6,5)
+        (10,8)
     )
 )
 agents.append(Agent(
     "Amy",
     "Amy, a 35-year-old freelance graphic designer, finds beauty in the details. Her cluttered but meticulously organized workspace is a testament to her creative process, filled with sketches, Pantone swatches, and half-finished projects. She's a thoughtful listener, always observing and absorbing the nuances of her surroundings. Amy has a sharp eye for color and composition, and a knack for translating abstract ideas into visually compelling designs. She's passionate about sustainability and incorporates eco-friendly practices into her work whenever possible. Though sometimes prone to overthinking, Amy's dedication to her craft and her clients is unwavering. She dreams of one day opening her own design studio, a space where creativity and community can flourish. She loves exploring local art galleries and cafes, finding inspiration in the everyday moments and the stories they hold.",
-    (4,8)
+    (20,22)
 ))
 
 @app.post("/step_simulation/")

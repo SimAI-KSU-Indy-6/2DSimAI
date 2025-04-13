@@ -7,7 +7,7 @@ allMap = [["E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E",
 ["E", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "I1", "I", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
 ["E", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "I1", "I", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
 ["E", "O", "O", "O", "O", "I", "I", "I", "I", "I", "I", "I", "O", "I", "I", "I", "I", "I", "I", "I", "I", "O", "O", "I1", "I", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
-["E", "O", "O", "O", "O", "I", "I", "R", "I", "I", "I", "I", "O", "I", "I", "I", "I", "I", "I", "I", "I", "O", "O", "I1", "I", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
+["E", "O", "O", "O", "O", "I", "I", "F", "I", "I", "I", "I", "O", "I", "I", "I", "I", "I", "I", "I", "I", "O", "O", "I1", "I", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
 ["E", "O", "O", "O", "O", "I", "I", "I", "I", "I", "I", "I", "O", "I", "I", "I", "I", "I", "I", "I", "I", "O", "O", "I1", "I", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
 ["E", "O", "O", "O", "O", "I", "I", "I", "I", "Ba", "I", "I", "O", "I", "I", "I", "I", "I", "I", "I", "I", "O", "O", "I1", "C", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
 ["E", "BE", "BE", "BE", "P", "I", "I", "I", "I", "I", "I", "I", "I", "I", "I", "I", "I", "I", "I", "I", "I", "P", "P", "I1", "I", "I2", "I", "I3", "I", "I4", "I", "I5", "I", "I6", "I", "I7", "I", "I8", "I", "E"],
@@ -40,7 +40,9 @@ allMap = [["E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E",
 ["E", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "E"],
 ["E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E"],
 
-]   
+]
+
+#print(allMap[37][44])
 
 tile_definitions = { #Tuples for character in 2D map to description
     "E": "Edge of map",
@@ -53,8 +55,9 @@ tile_definitions = { #Tuples for character in 2D map to description
     "Ba": "Bathroom",
     "T": "Table",
     "S": "Stove",
-    "R": "Refrigerator",
+    "R": "Road",
     "Co": "Couch",
+    "F": "Fridge",
     "I1": "Aisle 1",
     "I2": "Aisle 2",
     "I3": "Aisle 3",
@@ -66,7 +69,10 @@ tile_definitions = { #Tuples for character in 2D map to description
     "C": "Cashier",
     "G": "Garden",
     "SW": "Swing set",
-    "I": "Interior"
+    "I": "Interior",
+    "O": "Not Accessible",
+    "Y": "Yard",
+    "GH": "Green House"
 }
 
 tileDefToString = ''.join(f"{k} - {v} | " for k, v in tile_definitions.items()) #toString for tile Definitions
@@ -99,11 +105,13 @@ paddedDefaultMap = betterPadList(allMap)
 
 def agentMap(x, y, agents):
     tempAllMap = [row[:] for row in allMap]
-    tempAllMap[x][y] = "CHAR"
+    if x < len(allMap) and y < len(allMap[0]): #Check map boundaries
+        tempAllMap[y][x] = "CHAR"
 
-    for agent in agents:
-        agentX = agent.location[0]
-        agentY = agent.location[1]
+        for agent in agents:
+            agentX = agent.location[0]
+            agentY = agent.location[1]
+            
+            tempAllMap[agentX][agentY] = agent.name
 
-        tempAllMap[agentX][agentY] = agent.name
     return betterPadList(tempAllMap)

@@ -4,8 +4,31 @@ export class DevScene extends Scene {
     constructor() {
         super('Dev');
     }
+    
+    drawGrid(cellWidth: number, cellHeight: number) {
+        const graphics = this.add.graphics();
+        graphics.lineStyle(1, 0x333333, 1); // Light gray lines
+
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+
+        // Draw vertical lines
+        for (let x = 0; x <= width; x += cellWidth) {
+            graphics.moveTo(x, 0);
+            graphics.lineTo(x, height);
+        }
+
+        // Draw horizontal lines
+        for (let y = 0; y <= height; y += cellHeight) {
+            graphics.moveTo(0, y);
+            graphics.lineTo(width, y);
+        }
+
+        graphics.strokePath();
+    }
 
     create() {
+        this.drawGrid(32, 32);
         // Fetch agents data
         fetch('http://localhost:8000/agents/')
         .then(response => response.json())

@@ -222,7 +222,7 @@ class Thought:
         self.action = jsonObj["action_description"]
         self.location = jsonObj["target_location"]
         self.locationDesc = jsonObj["target_location_description"]
-        self.endLoc = tuple(jsonObj["target_coordinates"])
+        self.endLoc = tuple(reversed(tuple(jsonObj["target_coordinates"])))
 
     def __str__(self):
         return (
